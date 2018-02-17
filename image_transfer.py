@@ -3,24 +3,26 @@ import os
 import tensorflow as tf
 from PIL import Image
 
+import sys
+
 cwd = os.getcwd()
 
 WIDTH = 64
 HEIGHT = 64
 CHANNEL = 3
 CLASSES = 4
-SAMPLE_NUMS = 49+48+39+87
+SAMPLE_NUMS = 296
 
-classes = {'red-49','yellow-48','cyan-39','normal-87'}
+classes = ['red','yellow']
 #制作二进制数据
-def create_record():
-    writer = tf.python_io.TFRecordWriter("train.tfrecords")
+def create_record(filename):
+    writer = tf.python_io.TFRecordWriter(filename)
     for index, name in enumerate(classes):
         class_path = cwd +"/"+ name+"/"
-        for img_name in os.listdir(class_path):
+        for img_name in sorted(os.listdir(class_path)):
             img_path = class_path + img_name
             img = Image.open(img_path)
-            img = img.resize((64, 64))
+            img = img.resize((WIDTH, HEIGHT))
             img_raw = img.tobytes() #将图片转化为原生bytes
             #print(index,img_raw)
             example = tf.train.Example(
@@ -30,7 +32,6 @@ def create_record():
                }))
             writer.write(example.SerializeToString())
     writer.close()
-data = create_record()
 
 #读取二进制数据
 def read_and_decode(filename):
@@ -58,10 +59,10 @@ def read_and_decode(filename):
 
 
 if __name__ == '__main__':
-    if 0:
-        data = create_record("train.tfrecords")
+    if len(sys.argv)>1 and sys.argv[1] == '1':
+        data = create_record("test.tfrecords")
     else:
-        batch = read_and_decode("train.tfrecords")
+        batch = read_and_decode("test.tfrecords")
         #使用shuffle_batch可以随机打乱输入 next_batch挨着往下取
         # shuffle_batch才能实现[img,label]的同步,也即特征和label的同步,不然可能输入的特征和label不匹配
         # 比如只有这样使用,才能使img和label一一对应,每次提取一个image和对应的label
@@ -83,7 +84,7 @@ if __name__ == '__main__':
             for i in range(SAMPLE_NUMS):
                 example,l = sess.run(batch)#take out image and label
                 img=Image.fromarray(example, 'RGB')
-                img.save('./genpics/'+str(i)+'_''Label_'+str(l)+'.png')#save image
+                img.save('./test_genpics/'+str(i)+'_''Label_'+str(l)+'.png')#save image
 
             coord.request_stop()
             coord.join(threads)

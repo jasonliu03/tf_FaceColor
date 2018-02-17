@@ -66,7 +66,7 @@ with tf.Session() as sess:
 
     total, right = 0, 0
     wrong = []
-    for fn in glob('genpics/*_Label_*.png'):
+    for fn in sorted(glob('test_genpics/*_Label_*.png')):
         with open(fn, 'rb') as f:
             print('file_name:%s' % fn) 
             result=imageprepare(file_name=fn)

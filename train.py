@@ -3,19 +3,25 @@ import os
 import tensorflow as tf
 from PIL import Image
 
+import sys
+
 cwd = os.getcwd()
 
+WIDTH = 64
+HEIGHT = 64
+CHANNEL = 3
+CLASSES = 4
 
-classes = {'red-49','yellow-48','cyan-39','normal-87'}
+classes = ['red-49','yellow-48','cyan-39','normal-87']
 #制作二进制数据
-def create_record():
-    writer = tf.python_io.TFRecordWriter("train.tfrecords")
+def create_record(filename):
+    writer = tf.python_io.TFRecordWriter(filename)
     for index, name in enumerate(classes):
         class_path = cwd +"/"+ name+"/"
-        for img_name in os.listdir(class_path):
+        for img_name in sorted(os.listdir(class_path)):
             img_path = class_path + img_name
             img = Image.open(img_path)
-            img = img.resize((64, 64))
+            img = img.resize((WIDTH, HEIGHT))
             img_raw = img.tobytes() #将图片转化为原生bytes
             #print(index,img_raw)
             example = tf.train.Example(
@@ -25,7 +31,6 @@ def create_record():
                }))
             writer.write(example.SerializeToString())
     writer.close()
-data = create_record()
 
 #读取二进制数据
 def read_and_decode(filename):
@@ -53,10 +58,6 @@ def read_and_decode(filename):
     return img, label
 
 
-WIDTH = 64
-HEIGHT = 64
-CHANNEL = 3
-CLASSES = 4
 x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL])
 y_ = tf.placeholder(tf.float32, shape=[None, CLASSES])
 W = tf.Variable(tf.zeros([WIDTH*HEIGHT*CHANNEL,CLASSES]))
@@ -74,7 +75,7 @@ correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 if __name__ == '__main__':
-    if 0:
+    if len(sys.argv)>1 and sys.argv[1] == '1':
         data = create_record("train.tfrecords")
     else:
         img, label = read_and_decode("train.tfrecords")
@@ -102,7 +103,7 @@ if __name__ == '__main__':
             summary_writer = tf.summary.FileWriter('logs/faceColor_1fc_logs',sess.graph)
 
 
-            for i in range(3000):
+            for i in range(2000):
               val, l = sess.run([img_batch, label_batch])
               l = tf.one_hot(l,CLASSES,1,0) 
               l = sess.run(l)
