@@ -73,7 +73,6 @@ train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-
 if __name__ == '__main__':
     if 0:
         data = create_record("train.tfrecords")
@@ -99,6 +98,10 @@ if __name__ == '__main__':
             coord=tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
 
+            merged_summary_op = tf.summary.merge_all()
+            summary_writer = tf.summary.FileWriter('logs/faceColor_1fc_logs',sess.graph)
+
+
             for i in range(3000):
               val, l = sess.run([img_batch, label_batch])
               l = tf.one_hot(l,CLASSES,1,0) 
@@ -109,6 +112,8 @@ if __name__ == '__main__':
                     x:val, y_: l})
                 print("step %d, training accuracy %g"%(i, train_accuracy))
               train_step.run(feed_dict={x: val, y_: l})
+              summary_str = sess.run(merged_summary_op,feed_dict={x: val, y_: l})
+              summary_writer.add_summary(summary_str, i)
 
             val, l = sess.run([img_batch, label_batch])
             l = tf.one_hot(l,CLASSES,1,0) 
