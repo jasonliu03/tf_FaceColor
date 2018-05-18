@@ -49,10 +49,10 @@ h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
 # densely connected layer
-w_fc1 = weight_variable([16*16*64, 1024])
+w_fc1 = weight_variable([WIDTH/4*HEIGHT/4*64, 1024])
 b_fc1 = bias_variable([1024])
 
-h_pool2_flat = tf.reshape(h_pool2, [-1, 16*16*64])
+h_pool2_flat = tf.reshape(h_pool2, [-1, WIDTH/4*HEIGHT/4*64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, w_fc1) + b_fc1)
 print h_fc1
 # dropout
