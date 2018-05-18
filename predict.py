@@ -6,10 +6,7 @@ import numpy as np
 
 from glob import glob
 
-WIDTH = 200
-HEIGHT = 200
-CHANNEL = 3 
-CLASSES = 3 
+from records_utils import WIDTH, HEIGHT, CHANNEL, CLASSES
 
 def imageprepare(file_name):
     """ 
@@ -102,7 +99,7 @@ with tf.Session() as sess:
 
     total, right = 0, 0
     wrong = []
-    for fn in sorted(glob('train_genpics/*_Label_*.png')):
+    for fn in sorted(glob('train_genpics/*_Label_*.jpg')):
         print('file_name:%s' % fn) 
         result=imageprepare(file_name=fn)
 
