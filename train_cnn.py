@@ -5,11 +5,12 @@ import tensorflow as tf
 
 from records_utils import *
 
-ITER_NUMS = 2000
+ITER_NUMS = 8000
 EVAL_STEP = 50
 LRARNING_RATE = 0.001
-TRAIN_BATCH_SIZE = 10
+TRAIN_BATCH_SIZE = 30
 KEEP_PROB = 0.9
+SAVE_MODEL_INTERVAL = 1000 
 
 # weight initialization
 def weight_variable(shape):
@@ -29,34 +30,41 @@ def max_pool_2x2(x):
 
 
 # create the model
-x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL])
+x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL], name="x")
 y_ = tf.placeholder(tf.float32, shape=[None, CLASSES])
 W = tf.Variable(tf.zeros([WIDTH*HEIGHT*CHANNEL,CLASSES]))
 b = tf.Variable(tf.zeros([CLASSES]))
 
 # first convolutinal layer
-w_conv1 = weight_variable([5, 5, CHANNEL, 32])
-b_conv1 = bias_variable([32])
+w_conv1 = weight_variable([7, 7, CHANNEL, 16])
+b_conv1 = bias_variable([16])
 x_image = tf.reshape(x, [-1, WIDTH, HEIGHT, CHANNEL])
 h_conv1 = tf.nn.relu(conv2d(x_image, w_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
 # second convolutional layer
-w_conv2 = weight_variable([5, 5, 32, 64])
-b_conv2 = bias_variable([64])
+w_conv2 = weight_variable([5, 5, 16, 32])
+b_conv2 = bias_variable([32])
 
 h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
+# third convolutional layer
+w_conv3 = weight_variable([3, 3, 32, 64])
+b_conv3 = bias_variable([64])
+
+h_conv3 = tf.nn.relu(conv2d(h_pool2, w_conv3) + b_conv3)
+h_pool3 = max_pool_2x2(h_conv3)
+
 # densely connected layer
-w_fc1 = weight_variable([WIDTH/4*HEIGHT/4*64, 1024])
+w_fc1 = weight_variable([WIDTH/8*HEIGHT/8*64, 1024])
 b_fc1 = bias_variable([1024])
 
-h_pool2_flat = tf.reshape(h_pool2, [-1, WIDTH/4*HEIGHT/4*64])
-h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, w_fc1) + b_fc1)
+h_pool3_flat = tf.reshape(h_pool3, [-1, WIDTH/8*HEIGHT/8*64])
+h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, w_fc1) + b_fc1)
 print h_fc1
 # dropout
-keep_prob = tf.placeholder("float")
+keep_prob = tf.placeholder("float", name="keep_prob")
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 print h_fc1_drop
 # readout layer
@@ -65,7 +73,7 @@ b_fc2 = bias_variable([CLASSES])
 
 #y = tf.nn.softmax(tf.matmul(h_fc1_drop, w_fc2) + b_fc2)
 y = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
-
+tf.add_to_collection('pred_network', y)
 
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
@@ -106,6 +114,7 @@ if __name__ == '__main__':
             merged_summary_op = tf.summary.merge_all()
             summary_writer = tf.summary.FileWriter('logs/faceColor_logs',sess.graph)
 
+            saver = tf.train.Saver(max_to_keep=0)  # defaults to saving all variables
 
             for i in range(ITER_NUMS):
               val, l = sess.run([img_batch, label_batch])
@@ -122,17 +131,17 @@ if __name__ == '__main__':
               summary_str = sess.run(merged_summary_op,feed_dict={x: val, y_: l, keep_prob:1})
               summary_writer.add_summary(summary_str, i)
 
+              if (i+1) % SAVE_MODEL_INTERVAL == 0:
+                  print("save model:%d" % (i+1))
+                  saver.save(sess, './model.ckpt', global_step = i+1)  #保存模型参数，注意把这里改为自己的路径
+                  
+
             # calc test accuracy on large batch
             val, l = sess.run([test_img_batch, test_label_batch])
             l = tf.one_hot(l,CLASSES,1,0) 
             l = sess.run(l)
             print("test accuracy %g" % accuracy.eval(feed_dict={x: val, y_: l, keep_prob:1}))
     
-    
-            # save model paras
-            saver = tf.train.Saver()  # defaults to saving all variables
-            saver.save(sess, './model.ckpt')  #保存模型参数，注意把这里改为自己的路径
-
             coord.request_stop()
             coord.join(threads)
 
