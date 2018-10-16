@@ -20,7 +20,7 @@ def imageprepare(file_name):
 #    plt.show()
 
     tv = np.asarray(im)
-    tv = np.reshape(tv, [WIDTH*HEIGHT*CHANNEL])
+    tv = np.reshape(tv, [WIDTH, HEIGHT, CHANNEL])
     tv = np.true_divide(tv, 255) - 0.5
     return tv 
 

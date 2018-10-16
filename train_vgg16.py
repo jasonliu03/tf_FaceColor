@@ -13,68 +13,60 @@ KEEP_PROB = 0.9
 SAVE_MODEL_INTERVAL = 1000 
 
 # weight initialization
-def weight_variable(shape):
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
+def print_layer(t):
+    print t.op.name, ' ', t.get_shape().as_list(), '\n'
 
-def bias_variable(shape):
-    initial = tf.constant(0.1, shape = shape)
-    return tf.Variable(initial)
-
-# convolution
-def conv2d(x, W):
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-# pooling
-def max_pool_2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+def fc(x, n_out, name, fineturn=False, xavier=False):
+    n_in = x.get_shape()[-1].value
+    with tf.name_scope(name) as scope:
+        if fineturn:
+            '''
+            weight = tf.Variable(tf.constant(data_dict[name][0]), name="weights")
+            bias = tf.Variable(tf.constant(data_dict[name][1]), name="bias")
+            '''
+            weight = tf.constant(data_dict[name][0], name="weights")
+            bias = tf.constant(data_dict[name][1], name="bias")
+            print "fineturn"
+        elif not xavier:
+            weight = tf.Variable(tf.truncated_normal([n_in, n_out], stddev=0.01), name='weights')
+            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
+                                                trainable=True, 
+                                                name='bias')
+            print "truncated_normal"
+        else:
+            weight = tf.get_variable(scope+'weights', shape=[n_in, n_out], 
+                                                dtype=tf.float32,
+                                                initializer=tf.contrib.layers.xavier_initializer_conv2d())
+            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
+                                                trainable=True, 
+                                                name='bias')
+            print "xavier"
+        # 全连接层可以使用relu_layer函数比较方便，不用像卷积层使用relu函数
+        activation = tf.nn.relu_layer(x, weight, bias, name=name)
+        print_layer(activation)
+        return activation
 
 
 # create the model
-#x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL], name="x")
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
 y_ = tf.placeholder(tf.float32, shape=[None, CLASSES])
-W = tf.Variable(tf.zeros([WIDTH*HEIGHT*CHANNEL,CLASSES]))
-b = tf.Variable(tf.zeros([CLASSES]))
-
-# first convolutinal layer
-w_conv1 = weight_variable([7, 7, CHANNEL, 16])
-b_conv1 = bias_variable([16])
-x_image = tf.reshape(x, [-1, WIDTH, HEIGHT, CHANNEL])
-h_conv1 = tf.nn.relu(conv2d(x_image, w_conv1) + b_conv1)
-h_pool1 = max_pool_2x2(h_conv1)
-
-# second convolutional layer
-w_conv2 = weight_variable([5, 5, 16, 32])
-b_conv2 = bias_variable([32])
-
-h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
-h_pool2 = max_pool_2x2(h_conv2)
-
-# third convolutional layer
-w_conv3 = weight_variable([3, 3, 32, 64])
-b_conv3 = bias_variable([64])
-
-h_conv3 = tf.nn.relu(conv2d(h_pool2, w_conv3) + b_conv3)
-h_pool3 = max_pool_2x2(h_conv3)
-
-# densely connected layer
-w_fc1 = weight_variable([WIDTH/8*HEIGHT/8*64, 1024])
-b_fc1 = bias_variable([1024])
-
-h_pool3_flat = tf.reshape(h_pool3, [-1, WIDTH/8*HEIGHT/8*64])
-h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, w_fc1) + b_fc1)
-print h_fc1
-# dropout
 keep_prob = tf.placeholder("float", name="keep_prob")
-h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-print h_fc1_drop
-# readout layer
-w_fc2 = weight_variable([1024, CLASSES])
-b_fc2 = bias_variable([CLASSES])
 
-#y = tf.nn.softmax(tf.matmul(h_fc1_drop, w_fc2) + b_fc2)
-y = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
+import vgg16
+vgg = vgg16.Vgg16()
+vgg.build(x)
+feature_map = vgg.pool5
+
+flatten  = tf.reshape(feature_map, [-1, 7*7*512])
+fc6      = fc(flatten, 4096, 'fc6', xavier=True)
+dropout1 = tf.nn.dropout(fc6, keep_prob)
+
+fc7      = fc(dropout1, 4096, 'fc7', xavier=True)
+dropout2 = tf.nn.dropout(fc7, keep_prob)
+    
+y = fc(dropout2, CLASSES, 'fc8', xavier=True)
 tf.add_to_collection('pred_network', y)
+
 
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))

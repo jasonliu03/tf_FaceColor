@@ -6,13 +6,16 @@ from PIL import Image
 
 cwd = os.getcwd()
 
-WIDTH = 64
-HEIGHT = 64
+WIDTH = 224
+HEIGHT = 224
 CHANNEL = 3 
-CLASSES = 4 
+CLASSES = 2 
 
 # to change: folder list
-classes = ['red-49','yellow-48','cyan-39','normal-87']
+#classes = ['red-49','yellow-48','cyan-39','normal-87']
+classes = "man women".split()
+#classes = "1 2 3 4 5".split()
+
 #制作二进制数据
 def create_record(filename):
     writer = tf.python_io.TFRecordWriter(filename)
@@ -51,8 +54,8 @@ def read_and_decode(filename):
     label = features['label']
     img = features['img_raw']
     img = tf.decode_raw(img, tf.uint8)
-    img = tf.reshape(img, [WIDTH*HEIGHT*CHANNEL])
-    #img = tf.reshape(img, [64, 64, 3]) 
+    #img = tf.reshape(img, [WIDTH*HEIGHT*CHANNEL])
+    img = tf.reshape(img, [WIDTH, HEIGHT, CHANNEL]) 
     img = tf.cast(img, tf.float32) * (1. / 255) - 0.5 
     label = tf.cast(label, tf.int32)
     return img, label
