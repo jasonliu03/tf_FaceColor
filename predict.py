@@ -24,32 +24,6 @@ def imageprepare(file_name):
     tv = np.true_divide(tv, 255) - 0.5
     return tv 
 
-
-# weight initialization
-def weight_variable(shape):
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
-
-def bias_variable(shape):
-    initial = tf.constant(0.1, shape = shape)
-    return tf.Variable(initial)
-
-# convolution
-def conv2d(x, W): 
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-# pooling
-def max_pool_2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-
-"""
-Load the model.ckpt file
-file is stored in the same directory as this python script is started
-Use the model to predict the integer. Integer is returend as list.
-
-Based on the documentatoin at
-https://www.tensorflow.org/versions/master/how_tos/variables/index.html
-"""
-#saver = tf.train.Saver()
 init_op = tf.initialize_all_variables()
 with tf.Session() as sess:
     sess.run(init_op)
