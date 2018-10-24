@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from records_utils import *
 
-ITER_NUMS = 8000
+ITER_NUMS = 10000
 EVAL_STEP = 50
 LRARNING_RATE = 0.001
 TRAIN_BATCH_SIZE = 30
@@ -32,7 +32,7 @@ def max_pool_2x2(x):
 # create the model
 #x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL], name="x")
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES])
+y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
 W = tf.Variable(tf.zeros([WIDTH*HEIGHT*CHANNEL,CLASSES]))
 b = tf.Variable(tf.zeros([CLASSES]))
 

@@ -7,74 +7,13 @@ from records_utils import *
 
 ITER_NUMS = 10000
 EVAL_STEP = 50
-LRARNING_RATE = 0.001
-TRAIN_BATCH_SIZE = 30
-KEEP_PROB = 0.9
+LRARNING_RATE = 0.0001
+TRAIN_BATCH_SIZE = 50
+KEEP_PROB = 0.8
+
 SAVE_MODEL_INTERVAL = 1000 
+RELOAD_BASE = 5000
 
-# weight initialization
-def print_layer(t):
-    print t.op.name, ' ', t.get_shape().as_list(), '\n'
-
-def fc(x, n_out, name, fineturn=False, xavier=False):
-    n_in = x.get_shape()[-1].value
-    with tf.name_scope(name) as scope:
-        if fineturn:
-            '''
-            weight = tf.Variable(tf.constant(data_dict[name][0]), name="weights")
-            bias = tf.Variable(tf.constant(data_dict[name][1]), name="bias")
-            '''
-            weight = tf.constant(data_dict[name][0], name="weights")
-            bias = tf.constant(data_dict[name][1], name="bias")
-            print "fineturn"
-        elif not xavier:
-            weight = tf.Variable(tf.truncated_normal([n_in, n_out], stddev=0.01), name='weights')
-            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
-                                                trainable=True, 
-                                                name='bias')
-            print "truncated_normal"
-        else:
-            weight = tf.get_variable(scope+'weights', shape=[n_in, n_out], 
-                                                dtype=tf.float32,
-                                                initializer=tf.contrib.layers.xavier_initializer_conv2d())
-            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
-                                                trainable=True, 
-                                                name='bias')
-            print "xavier"
-        # 全连接层可以使用relu_layer函数比较方便，不用像卷积层使用relu函数
-        activation = tf.nn.relu_layer(x, weight, bias, name=name)
-        print_layer(activation)
-        return activation
-
-
-# create the model
-x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
-keep_prob = tf.placeholder("float", name="keep_prob")
-
-import vgg16
-vgg = vgg16.Vgg16()
-vgg.build(x)
-feature_map = vgg.pool5
-
-flatten  = tf.reshape(feature_map, [-1, 7*7*512])
-fc6      = fc(flatten, 4096, 'fc6', xavier=True)
-dropout1 = tf.nn.dropout(fc6, keep_prob)
-
-fc7      = fc(dropout1, 4096, 'fc7', xavier=True)
-dropout2 = tf.nn.dropout(fc7, keep_prob)
-    
-y = fc(dropout2, CLASSES, 'fc8', xavier=True)
-tf.add_to_collection('pred_network', y)
-
-
-cross_entropy = tf.reduce_mean(
-    tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-
-train_step = tf.train.GradientDescentOptimizer(LRARNING_RATE).minimize(cross_entropy)
-
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 if __name__ == '__main__':
     if len(sys.argv)>1 and sys.argv[1] == '1':
@@ -99,6 +38,30 @@ if __name__ == '__main__':
 
         with tf.Session() as sess:
             sess.run(init)
+
+            ## load the graph and restore the params
+            saver = tf.train.import_meta_graph('model.ckpt-1000.meta')
+            #saver.restore(sess,tf.train.latest_checkpoint('./'))
+            saver.restore(sess, "./model.ckpt-"+str(RELOAD_BASE))#这里使用了之前保存的模型参数
+            print ("Model restored.")
+
+            ## get the tensor and operation
+            graph = tf.get_default_graph()
+            x=graph.get_operation_by_name('x').outputs[0]
+            #x=graph.get_tensor_by_name('x:0')
+            keep_prob=graph.get_tensor_by_name('keep_prob:0')
+            y=tf.get_collection("pred_network")[0]
+            y_=graph.get_tensor_by_name('y_:0')
+
+            
+            cross_entropy = tf.reduce_mean(
+                tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+            
+            train_step = tf.train.GradientDescentOptimizer(LRARNING_RATE).minimize(cross_entropy)
+            
+            correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
             # 启动队列
             coord=tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
@@ -125,8 +88,8 @@ if __name__ == '__main__':
               summary_writer.add_summary(summary_str, i)
 
               if (i+1) % SAVE_MODEL_INTERVAL == 0:
-                  print("save model:%d" % (i+1))
-                  saver.save(sess, './model.ckpt', global_step = i+1)  #保存模型参数，注意把这里改为自己的路径
+                  print("save model:%d" % (i+1+RELOAD_BASE))
+                  saver.save(sess, './model.ckpt', global_step = i+1+RELOAD_BASE)  #保存模型参数，注意把这里改为自己的路径
                   
 
             # calc test accuracy on large batch
