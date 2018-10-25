@@ -17,7 +17,7 @@ SAVE_MODEL_INTERVAL = 1000
 
 # create the model
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES])
+y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
 keep_prob = tf.placeholder("float", name="keep_prob")
     
 y = alexnet.alex_net(x, keep_prob, CLASSES, WIDTH, CHANNEL)
@@ -29,7 +29,8 @@ cross_entropy = tf.reduce_mean(
 
 global_step = tf.Variable(0, trainable=False)
 lr = tf.train.exponential_decay(LRARNING_RATE, global_step, 1000, DECAY_RATE, staircase=True)
-train_step = tf.train.GradientDescentOptimizer(lr).minimize(cross_entropy, global_step = global_step)
+#train_step = tf.train.GradientDescentOptimizer(lr).minimize(cross_entropy, global_step = global_step)
+train_step = tf.train.AdamOptimizer(lr).minimize(cross_entropy, global_step = global_step)
 
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
