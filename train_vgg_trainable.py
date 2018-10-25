@@ -55,7 +55,7 @@ keep_prob = tf.placeholder("float", name="keep_prob")
 train_mode = tf.placeholder(tf.bool)
 import vgg19_trainable as vgg19
 vgg = vgg19.Vgg19("./vgg19.npy")
-vgg.build(x, train_mode)
+vgg.build(x, keep_prob, train_mode)
 feature_map = vgg.pool5
 
 #flatten  = tf.reshape(feature_map, [-1, 7*7*512])
