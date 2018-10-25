@@ -8,7 +8,7 @@ from records_utils import *
 ITER_NUMS = 10000
 EVAL_STEP = 50
 LRARNING_RATE = 0.001
-TRAIN_BATCH_SIZE = 30
+TRAIN_BATCH_SIZE = 50
 KEEP_PROB = 0.9
 SAVE_MODEL_INTERVAL = 1000 
 
@@ -49,7 +49,7 @@ def fc(x, n_out, name, fineturn=False, xavier=False):
 
 # create the model
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
+y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y_')
 keep_prob = tf.placeholder("float", name="keep_prob")
 
 import vgg16

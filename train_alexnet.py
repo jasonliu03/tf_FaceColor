@@ -17,7 +17,7 @@ SAVE_MODEL_INTERVAL = 1000
 
 # create the model
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
+y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y_')
 keep_prob = tf.placeholder("float", name="keep_prob")
     
 y = alexnet.alex_net(x, keep_prob, CLASSES, WIDTH, CHANNEL)

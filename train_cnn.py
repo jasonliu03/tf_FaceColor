@@ -32,7 +32,7 @@ def max_pool_2x2(x):
 # create the model
 #x = tf.placeholder(tf.float32, shape=[None, WIDTH*HEIGHT*CHANNEL], name="x")
 x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
-y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y')
+y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y_')
 W = tf.Variable(tf.zeros([WIDTH*HEIGHT*CHANNEL,CLASSES]))
 b = tf.Variable(tf.zeros([CLASSES]))
 
