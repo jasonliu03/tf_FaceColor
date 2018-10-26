@@ -50,7 +50,7 @@ if __name__ == '__main__':
             x=graph.get_operation_by_name('x').outputs[0]
             #x=graph.get_tensor_by_name('x:0')
             keep_prob=graph.get_tensor_by_name('keep_prob:0')
-            y=tf.get_collection("pred_network")[0]
+            y=tf.get_collection("y")[0]
             y_=graph.get_tensor_by_name('y_:0')
 
             

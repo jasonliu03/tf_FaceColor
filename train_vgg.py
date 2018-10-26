@@ -65,7 +65,7 @@ fc7      = fc(dropout1, 4096, 'fc7', xavier=True)
 dropout2 = tf.nn.dropout(fc7, keep_prob)
     
 y = fc(dropout2, CLASSES, 'fc8', xavier=True)
-tf.add_to_collection('pred_network', y)
+tf.add_to_collection('y', y)
 
 
 cross_entropy = tf.reduce_mean(

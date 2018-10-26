@@ -21,7 +21,7 @@ y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y_')
 keep_prob = tf.placeholder("float", name="keep_prob")
     
 y = alexnet.alex_net(x, keep_prob, CLASSES, WIDTH, CHANNEL)
-tf.add_to_collection('pred_network', y)
+tf.add_to_collection('y', y)
 
 
 cross_entropy = tf.reduce_mean(

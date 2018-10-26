@@ -74,7 +74,7 @@ b_fc2 = bias_variable([CLASSES])
 
 #y = tf.nn.softmax(tf.matmul(h_fc1_drop, w_fc2) + b_fc2)
 y = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
-tf.add_to_collection('pred_network', y)
+tf.add_to_collection('y', y)
 
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))

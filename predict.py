@@ -25,7 +25,9 @@ def imageprepare(file_name):
     return tv 
 
 init_op = tf.initialize_all_variables()
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+with tf.Session(config=config) as sess:
     sess.run(init_op)
 
     ## load the graph and restore the params
@@ -39,7 +41,7 @@ with tf.Session() as sess:
     x=graph.get_operation_by_name('x').outputs[0]
     #x=graph.get_tensor_by_name('x:0')
     keep_prob=graph.get_tensor_by_name('keep_prob:0')
-    y=tf.get_collection("pred_network")[0]
+    y=tf.get_collection("y")[0]
 
     total, right = 0, 0
     wrong = []

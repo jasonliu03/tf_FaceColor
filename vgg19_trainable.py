@@ -26,11 +26,10 @@ class Vgg19:
 
         self.var_dict = {}
 
-    def build(self, rgb, keep_prob = 0.9, train_mode=None):
+    def build(self, rgb, keep_prob = 0.9):
         """
         load variable from npy to build the VGG
         :param rgb: rgb image [batch, height, width, 3] values scaled [0, 1]
-        :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         """
         bgr = rgb
 
@@ -76,11 +75,12 @@ class Vgg19:
 
         self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6")  # 25088 = ((224 / (2 ** 5)) ** 2) * 512
         self.relu6 = tf.nn.relu(self.fc6)
-        self.relu6 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu6, keep_prob), lambda: self.relu6)
+	tf.nn.dropout(self.relu6, keep_prob)
 
         self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7")
         self.relu7 = tf.nn.relu(self.fc7)
-        self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, keep_prob), lambda: self.relu7)
+	tf.nn.dropout(self.relu7, keep_prob)
+
 
         self.fc8 = self.fc_layer(self.relu7, 4096, 2, "fc8")
 

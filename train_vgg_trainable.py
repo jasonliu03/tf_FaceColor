@@ -52,23 +52,11 @@ x = tf.placeholder(tf.float32, shape=[None, WIDTH, HEIGHT, CHANNEL], name="x")
 y_ = tf.placeholder(tf.float32, shape=[None, CLASSES], name='y_')
 keep_prob = tf.placeholder("float", name="keep_prob")
 
-train_mode = tf.placeholder(tf.bool)
 import vgg19_trainable as vgg19
 vgg = vgg19.Vgg19("./vgg19.npy")
-vgg.build(x, keep_prob, train_mode)
-feature_map = vgg.pool5
-
-#flatten  = tf.reshape(feature_map, [-1, 7*7*512])
-#fc6      = fc(flatten, 4096, 'fc6', xavier=True)
-#dropout1 = tf.nn.dropout(fc6, keep_prob)
-#
-#fc7      = fc(dropout1, 4096, 'fc7', xavier=True)
-#dropout2 = tf.nn.dropout(fc7, keep_prob)
-#    
-#y = fc(dropout2, CLASSES, 'fc8', xavier=True)
-#tf.add_to_collection('pred_network', y)
+vgg.build(x, keep_prob)
 y = vgg.prob
-tf.add_to_collection('pred_network', y)
+tf.add_to_collection('y', y)
 
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
@@ -118,12 +106,12 @@ if __name__ == '__main__':
 
               if i%EVAL_STEP == 0:
                 train_accuracy = accuracy.eval(feed_dict={
-                    x:val, y_: l, keep_prob:1, train_mode:False})
+                    x:val, y_: l, keep_prob:1})
                 print("step %d, training accuracy %g"%(i, train_accuracy))
-              train_step.run(feed_dict={x: val, y_: l, keep_prob:KEEP_PROB, train_mode:True})
+              train_step.run(feed_dict={x: val, y_: l, keep_prob:KEEP_PROB})
 
               # add summary
-              summary_str = sess.run(merged_summary_op,feed_dict={x: val, y_: l, keep_prob:1, train_mode:True})
+              summary_str = sess.run(merged_summary_op,feed_dict={x: val, y_: l, keep_prob:1})
               summary_writer.add_summary(summary_str, i)
 
               if (i+1) % SAVE_MODEL_INTERVAL == 0:
@@ -135,7 +123,7 @@ if __name__ == '__main__':
             val, l = sess.run([test_img_batch, test_label_batch])
             l = tf.one_hot(l,CLASSES,1,0) 
             l = sess.run(l)
-            print("test accuracy %g" % accuracy.eval(feed_dict={x: val, y_: l, keep_prob:1, train_mode:False}))
+            print("test accuracy %g" % accuracy.eval(feed_dict={x: val, y_: l, keep_prob:1}))
     
             coord.request_stop()
             coord.join(threads)
