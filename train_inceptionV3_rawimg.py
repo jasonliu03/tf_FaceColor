@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on May 31 2018
-@author: 柳玉豹
-"""
 
 import glob
 import os.path
@@ -28,7 +24,7 @@ MODEL_FILE= 'classify_image_graph_def.pb'
 #特征向量 save path（一个训练数据会被多次使用，免去重复计算特征向量）
 CACHE_DIR = './datasets/bottleneck'
 #数据path（每个子文件夹中存放同一类别的图片）
-INPUT_DATA = './datasets/samples'
+INPUT_DATA = './datasets/samples/Gender'
 
 #验证数据 percentage
 VALIDATION_PERCENTAGE = 10
@@ -37,7 +33,7 @@ TEST_PERCENTAGE = 10
 
 #神经网络参数的设置
 LEARNING_RATE = 0.01
-STEPS = 10000
+STEPS = 60000
 BATCH = 50
 SAVE_MODEL_INTERVAL = 1000
 
@@ -215,7 +211,9 @@ def main():
     # 定义交叉熵损失函数。
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_)
     cross_entropy_mean = tf.reduce_mean(cross_entropy)
-    train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cross_entropy_mean)
+    #train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cross_entropy_mean)
+    train_step = tf.train.AdamOptimizer(LEARNING_RATE).minimize(cross_entropy_mean)
+    #train_step = tf.train.MomentumOptimizer(LEARNING_RATE, momentum=0.9).minimize(cross_entropy_mean)
     
     # 计算正确率。
     with tf.name_scope('evaluation'):

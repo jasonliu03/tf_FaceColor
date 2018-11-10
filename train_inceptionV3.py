@@ -7,7 +7,7 @@ from tensorflow.python.platform import gfile
 
 from records_utils import *
 
-ITER_NUMS = 10000
+ITER_NUMS = 30000
 EVAL_STEP = 50
 LRARNING_RATE = 0.01
 DECAY_RATE = 0.1
@@ -28,43 +28,6 @@ JPEG_DATA_TENSOR_NAME='DecodeJpeg:0'
 MODEL_DIR = './'
 MODEL_FILE = 'classify_image_graph_def.pb'
 
-#定义神经网络的设置
-BATCH=TRAIN_BATCH_SIZE
-
-
-def print_layer(t):
-    print t.op.name, ' ', t.get_shape().as_list(), '\n'
-
-def fc(x, n_out, name, fineturn=False, xavier=False):
-    n_in = x.get_shape()[-1].value
-    with tf.name_scope(name) as scope:
-        if fineturn:
-            '''
-            weight = tf.Variable(tf.constant(data_dict[name][0]), name="weights")
-            bias = tf.Variable(tf.constant(data_dict[name][1]), name="bias")
-            '''
-            weight = tf.constant(data_dict[name][0], name="weights")
-            bias = tf.constant(data_dict[name][1], name="bias")
-            print "fineturn"
-        elif not xavier:
-            weight = tf.Variable(tf.truncated_normal([n_in, n_out], stddev=0.01), name='weights')
-            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
-                                                trainable=True, 
-                                                name='bias')
-            print "truncated_normal"
-        else:
-            weight = tf.get_variable(scope+'weights', shape=[n_in, n_out], 
-                                                dtype=tf.float32,
-                                                initializer=tf.contrib.layers.xavier_initializer_conv2d())
-            bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
-                                                trainable=True, 
-                                                name='bias')
-            print "xavier"
-        # 全连接层可以使用relu_layer函数比较方便，不用像卷积层使用relu函数
-        activation = tf.nn.relu_layer(x, weight, bias, name=name)
-        print_layer(activation)
-        return activation
-
 
 #这个函数使用加载的训练好的Inception-v3模型处理一张图片，得到这个图片的特征向量。
 def run_bottleneck_on_image(sess,image_data,image_data_tensor,bottleneck_tensor):
@@ -80,7 +43,7 @@ def get_or_create_bottleneck(
     return bottleneck_values
 
 def get_random_cached_bottlenecks(
-        sess,image_lists,label_lists,how_many,
+        sess,image_lists,label_lists,
         jpeg_data_tensor,bottleneck_tensor):
     bottlenecks=[]
     ground_truths=[]
@@ -130,10 +93,10 @@ cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
 
 global_step = tf.Variable(0, trainable=False)
-lr = tf.train.exponential_decay(LRARNING_RATE, global_step, 1000, DECAY_RATE, staircase=True)
+#lr = tf.train.exponential_decay(LRARNING_RATE, global_step, 1000, DECAY_RATE, staircase=True)
 #train_step = tf.train.GradientDescentOptimizer(LRARNING_RATE).minimize(cross_entropy)
-#train_step = tf.train.AdamOptimizer(lr).minimize(cross_entropy, global_step = global_step)
-train_step = tf.train.MomentumOptimizer(learning_rate=LRARNING_RATE,momentum= 0.9).minimize(cross_entropy)
+train_step = tf.train.AdamOptimizer(LRARNING_RATE).minimize(cross_entropy, global_step = global_step)
+#train_step = tf.train.MomentumOptimizer(learning_rate=LRARNING_RATE,momentum= 0.9).minimize(cross_entropy)
 
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -175,7 +138,7 @@ if __name__ == '__main__':
               val, l = sess.run([img_batch, label_batch])
 
               val,l=get_random_cached_bottlenecks(
-                        sess,val,l,BATCH,jpeg_data_tensor,bottleneck_tensor)
+                        sess,val,l,jpeg_data_tensor,bottleneck_tensor)
                 
               if i%EVAL_STEP == 0:
                 train_accuracy = accuracy.eval(feed_dict={
@@ -199,7 +162,7 @@ if __name__ == '__main__':
             # calc test accuracy on large batch
             val, l = sess.run([test_img_batch, test_label_batch])
             val,l=get_random_cached_bottlenecks(
-                        sess,val,l,BATCH,jpeg_data_tensor,bottleneck_tensor)
+                        sess,val,l,jpeg_data_tensor,bottleneck_tensor)
             print("test accuracy %g" % accuracy.eval(feed_dict={x: val, y_: l}))
     
             coord.request_stop()

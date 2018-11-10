@@ -49,7 +49,7 @@ with tf.Session(config=config) as sess:
     ## load the graph and restore the params
     saver = tf.train.import_meta_graph('./inceptionV3/model.ckpt-1000.meta')
     #saver.restore(sess,tf.train.latest_checkpoint('./'))
-    saver.restore(sess, "./inceptionV3/model.ckpt-1000")#这里使用了之前保存的模型参数
+    saver.restore(sess, "./inceptionV3/model.ckpt-15000")#这里使用了之前保存的模型参数
     print ("Model restored.")
 
     ## get the tensor and operation

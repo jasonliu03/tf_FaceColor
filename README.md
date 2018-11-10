@@ -22,13 +22,13 @@ python train_reload.py (default reload model.kept-1000, configure RELOAD_BASE fi
 
 ## inceptionV3 ##
 python train_inceptionV3.py
-python train_reload_inceptionV3.py
+python train_reload_inceptionV3.py 
 
-python train_inceptionV3_rawimg.py
+python train_inceptionV3_rawimg.py (config INPUT_DATA)
 
 
 3. predict (adjust size of the image to test first; rename to the right format xxx_Label_x)
 python predict.py  (default: train_genpics)
 
 python predict_inceptionV3.py
-python predict_inceptionV3_rawimg.py
+python predict_inceptionV3_rawimg.py (config INPUT_DATA)

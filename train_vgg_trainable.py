@@ -5,9 +5,9 @@ import tensorflow as tf
 
 from records_utils import *
 
-ITER_NUMS = 10000
+ITER_NUMS = 20000
 EVAL_STEP = 50
-LRARNING_RATE = 0.001
+LRARNING_RATE = 0.01
 TRAIN_BATCH_SIZE = 50
 KEEP_PROB = 0.9
 SAVE_MODEL_INTERVAL = 1000 
@@ -61,7 +61,8 @@ tf.add_to_collection('y', y)
 cross_entropy = tf.reduce_mean(
     tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
 
-train_step = tf.train.GradientDescentOptimizer(LRARNING_RATE).minimize(cross_entropy)
+#train_step = tf.train.GradientDescentOptimizer(LRARNING_RATE).minimize(cross_entropy)
+train_step = tf.train.AdamOptimizer(LRARNING_RATE).minimize(cross_entropy)
 
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
               if (i+1) % SAVE_MODEL_INTERVAL == 0:
                   print("save model:%d" % (i+1))
-                  saver.save(sess, './model.ckpt', global_step = i+1)  #保存模型参数，注意把这里改为自己的路径
+                  saver.save(sess, './models_vgg_trainable/model.ckpt', global_step = i+1)  #保存模型参数，注意把这里改为自己的路径
                   
 
             # calc test accuracy on large batch

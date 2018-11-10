@@ -13,7 +13,7 @@ import tensorflow as tf
 #特征向量 save path（一个训练数据会被多次使用，免去重复计算特征向量）
 CACHE_DIR = './datasets/bottleneck'
 #数据path（每个子文件夹中存放同一类别的图片）
-INPUT_DATA = './datasets/test'
+INPUT_DATA = './datasets/test/Gender'
 
 #验证数据 percentage
 VALIDATION_PERCENTAGE = 0
@@ -153,7 +153,7 @@ def main():
         ## load the graph and restore the params
         saver = tf.train.import_meta_graph('./inceptionV3_rawimg/model.ckpt-1000.meta')
         #saver.restore(sess,tf.train.latest_checkpoint('./inceptionV3_rawimg'))
-        saver.restore(sess, "./inceptionV3_rawimg/model.ckpt-50000")#这里使用了之前保存的模型参数
+        saver.restore(sess, "./inceptionV3_rawimg/model.ckpt-46000")#这里使用了之前保存的模型参数
         print ("Model restored.")
 
         ## get the tensor and operation
